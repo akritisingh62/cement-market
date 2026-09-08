@@ -520,20 +520,19 @@
                 try {
 
                     const response =
-                        await fetch(
-                            https://cement-market.onrender.com/api/orders
-                            {
-                                method: "POST",
+    await fetch(
+        "https://cement-market.onrender.com/api/orders",
+        {
+           method: "POST",
 
-                                headers: {
-                                    "Content-Type":
-                                        "application/json"
-                                },
+headers: {
+    "Content-Type": "application/json"
+},
 
-                                body:
-                                    JSON.stringify(
-                                        orderData
-                                    )
+body:
+    JSON.stringify(
+        orderData
+    )
                             }
                         );
 

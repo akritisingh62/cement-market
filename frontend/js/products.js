@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/api/products";
+const API_URL = "https://cement-market.onrender.com/api/products";
 
 let products = [];
 
