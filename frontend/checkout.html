@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Cement Mall - Checkout</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            color: #222;
+        }
+
+        header {
+            background: #111;
+            color: white;
+            padding: 18px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 28px;
+        }
+
+        header a {
+            color: white;
+            text-decoration: none;
+            background: #e5a900;
+            padding: 12px 22px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .checkout-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 0.8fr;
+            gap: 28px;
+        }
+
+        .box {
+            background: white;
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .box h2 {
+            font-size: 27px;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-size: 17px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            height: 110px;
+            resize: vertical;
+        }
+
+        .place-order {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            background: #111;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .place-order:hover {
+            background: #e5a900;
+        }
+
+        .place-order:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .product {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .product-name {
+            font-size: 17px;
+            font-weight: bold;
+        }
+
+        .product-info {
+            color: #777;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        .price {
+            font-weight: bold;
+            font-size: 17px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            border-top: 2px solid #eee;
+            margin-top: 18px;
+            padding-top: 20px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .empty {
+            text-align: center;
+            color: #777;
+            padding: 30px 0;
+        }
+
+        .error {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #ffe0e0;
+            color: #a00000;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 800px) {
+            .checkout-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                padding: 15px 20px;
+            }
+
+            header h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+
+    <h1>🏗️ Cement Mall</h1>
+
+    <a href="shop.html">
+        ← Back to Shop
+    </a>
+
+</header>
+
+
+<div class="container">
+
+    <div class="checkout-grid">
+
+        <!-- CUSTOMER DETAILS -->
+
+        <div class="box">
+
+            <h2>Customer Details</h2>
+
+            <form id="checkoutForm">
+
+                <label for="customerName">
+                    Full Name
+                </label>
+
+                <input
+                    type="text"
+                    id="customerName"
+                    placeholder="Enter your name"
+                    required
+                >
+
+
+                <label for="customerPhone">
+                    Phone Number
+                </label>
+
+                <input
+                    type="tel"
+                    id="customerPhone"
+                    placeholder="Enter phone number"
+                    required
+                >
+
+
+                <label for="customerAddress">
+                    Delivery Address
+                </label>
+
+                <textarea
+                    id="customerAddress"
+                    placeholder="Enter complete delivery address"
+                    required
+                ></textarea>
+
+
+                <button
+                    type="submit"
+                    class="place-order"
+                    id="placeOrderBtn"
+                >
+                    Place Order
+                </button>
+
+            </form>
+
+
+            <!-- ERROR -->
+
+            <div id="errorMessage" class="error"></div>
+
+        </div>
+
+
+        <!-- ORDER SUMMARY -->
+
+        <div class="box">
+
+            <h2>Order Summary</h2>
+
+            <div id="cartItems"></div>
+
+            <div class="total-row">
+
+                <span>Total</span>
+
+                <span id="totalAmount">
+                    ₹0
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    // ==========================================
+    // GET CART FROM LOCAL STORAGE
+    // ==========================================
+
+    let cart =
+        JSON.parse(localStorage.getItem("cart")) || [];
+
+
+    const cartItems =
+        document.getElementById("cartItems");
+
+
+    const totalAmount =
+        document.getElementById("totalAmount");
+
+
+    let orderTotal = 0;
+
+
+    // ==========================================
+    // DISPLAY CART
+    // ==========================================
+
+    function displayCart() {
+
+        cartItems.innerHTML = "";
+
+        orderTotal = 0;
+
+
+        if (cart.length === 0) {
+
+            cartItems.innerHTML = `
+                <div class="empty">
+                    Your cart is empty.
+                </div>
+            `;
+
+            totalAmount.textContent = "₹0";
+
+            return;
+        }
+
+
+        cart.forEach(function(item) {
+
+            const price =
+                Number(item.price) || 0;
+
+
+            const quantity =
+                Number(item.quantity) || 1;
+
+
+            const itemTotal =
+                price * quantity;
+
+
+            orderTotal += itemTotal;
+
+
+            const product =
+                document.createElement("div");
+
+
+            product.className = "product";
+
+
+            product.innerHTML = `
+
+                <div>
+
+                    <div class="product-name">
+                        ${item.name || "Product"}
+                    </div>
+
+                    <div class="product-info">
+                        Quantity: ${quantity}
+                    </div>
+
+                </div>
+
+                <div class="price">
+                    ₹${itemTotal.toLocaleString("en-IN")}
+                </div>
+
+            `;
+
+
+            cartItems.appendChild(product);
+
+        });
+
+
+        totalAmount.textContent =
+            "₹" + orderTotal.toLocaleString("en-IN");
+    }
+
+
+    // ==========================================
+    // SHOW CART
+    // ==========================================
+
+    displayCart();
+
+
+    // ==========================================
+    // PLACE ORDER
+    // ==========================================
+
+    document
+        .getElementById("checkoutForm")
+        .addEventListener(
+            "submit",
+            async function(event) {
+
+                event.preventDefault();
+
+
+                const name =
+                    document
+                        .getElementById("customerName")
+                        .value
+                        .trim();
+
+
+                const phone =
+                    document
+                        .getElementById("customerPhone")
+                        .value
+                        .trim();
+
+
+                const address =
+                    document
+                        .getElementById("customerAddress")
+                        .value
+                        .trim();
+
+
+                const errorMessage =
+                    document.getElementById(
+                        "errorMessage"
+                    );
+
+
+                const placeOrderBtn =
+                    document.getElementById(
+                        "placeOrderBtn"
+                    );
+
+
+                errorMessage.style.display =
+                    "none";
+
+
+                // ==================================
+                // CHECK CART
+                // ==================================
+
+                if (cart.length === 0) {
+
+                    errorMessage.textContent =
+                        "Your cart is empty. Please add a product first.";
+
+                    errorMessage.style.display =
+                        "block";
+
+                    return;
+                }
+
+
+                // ==================================
+                // CALCULATE TOTAL
+                // ==================================
+
+                const finalTotal =
+                    Number(orderTotal);
+
+
+                if (
+                    !Number.isFinite(finalTotal) ||
+                    finalTotal <= 0
+                ) {
+
+                    errorMessage.textContent =
+                        "Order total is invalid.";
+
+                    errorMessage.style.display =
+                        "block";
+
+                    return;
+                }
+
+
+                // ==================================
+                // ORDER DATA
+                // ==================================
+
+                const orderData = {
+
+                    customer: {
+
+                        name: name,
+
+                        phone: phone,
+
+                        address: address
+
+                    },
+
+                    items: cart,
+
+                    total: finalTotal
+
+                };
+
+
+                console.log(
+                    "Sending order:",
+                    orderData
+                );
+
+
+                // ==================================
+                // DISABLE BUTTON
+                // ==================================
+
+                placeOrderBtn.disabled = true;
+
+                placeOrderBtn.textContent =
+                    "Placing Order...";
+
+
+                // ==================================
+                // SEND TO BACKEND
+                // ==================================
+
+                try {
+
+                    const response =
+                        await fetch(
+                            "http://localhost:5000/api/orders",
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify(
+                                        orderData
+                                    )
+                            }
+                        );
+
+
+                    const data =
+                        await response.json();
+
+
+                    console.log(
+                        "Server response:",
+                        data
+                    );
+
+
+                    // ==================================
+                    // BACKEND ERROR
+                    // ==================================
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            data.message ||
+                            data.error ||
+                            "Failed to place order"
+                        );
+
+                    }
+
+
+                    // ==================================
+                    // SAVE ORDER FOR SUCCESS PAGE
+                    // ==================================
+
+                    localStorage.setItem(
+                        "lastOrder",
+                        JSON.stringify({
+                            customer: {
+                                name: name,
+                                phone: phone,
+                                address: address
+                            },
+
+                            items: cart,
+
+                            total: finalTotal,
+
+                            orderId:
+                                data._id ||
+                                data.orderId ||
+                                ""
+                        })
+                    );
+
+
+                    // ==================================
+                    // CLEAR CART
+                    // ==================================
+
+                    localStorage.removeItem("cart");
+
+
+                    // ==================================
+                    // GO TO SUCCESS PAGE
+                    // ==================================
+
+                    window.location.href =
+                        "order-success.html";
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Order error:",
+                        error
+                    );
+
+
+                    errorMessage.textContent =
+                        "❌ " + error.message;
+
+
+                    errorMessage.style.display =
+                        "block";
+
+
+                    placeOrderBtn.disabled =
+                        false;
+
+
+                    placeOrderBtn.textContent =
+                        "Place Order";
+                }
+
+            }
+        );
+
+</script>
+
+</body>
+</html>
